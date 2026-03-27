@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simanim — Remember Torah</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --parchment:    #f5eedc;
+      --parchment-dark: #e8dfc4;
+      --ink:          #1a1208;
+      --ink-mid:      #3b2e14;
+      --gold:         #b8882a;
+      --gold-light:   #d4a843;
+      --gold-pale:    #f0dfa0;
+      --red-accent:   #8b2318;
+      --blue-accent:  #1c3a5e;
+      --shadow:       rgba(26,18,8,0.18);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--parchment);
+      color: var(--ink);
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 18px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── Parchment texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 3rem;
+      height: 64px;
+      background: rgba(245,238,220,0.92);
+      backdrop-filter: blur(6px);
+      border-bottom: 1.5px solid var(--gold);
+      box-shadow: 0 2px 18px var(--shadow);
+    }
+
+    .nav-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.08em;
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--gold); }
+
+    .nav-links { display: flex; gap: 2.2rem; list-style: none; }
+
+    .nav-links a {
+      font-family: 'EB Garamond', serif;
+      font-size: 1rem;
+      color: var(--ink-mid);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute; bottom: -3px; left: 0; right: 0;
+      height: 1px; background: var(--gold);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.25s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+    .nav-links a:hover::after { transform: scaleX(1); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 5rem;
+      overflow: hidden;
+    }
+
+    /* decorative arched frame */
+    .hero-frame {
+      position: absolute;
+      top: 80px; left: 50%; transform: translateX(-50%);
+      width: min(680px, 92vw);
+      height: calc(100% - 100px);
+      border: 2px solid var(--gold);
+      border-radius: 50% 50% 0 0 / 12% 12% 0 0;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .hero-frame-inner {
+      position: absolute;
+      top: 92px; left: 50%; transform: translateX(-50%);
+      width: min(640px, 88vw);
+      height: calc(100% - 112px);
+      border: 1px solid var(--gold);
+      border-radius: 50% 50% 0 0 / 12% 12% 0 0;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+
+    /* Hebrew letter Shin watermark */
+    .hero-watermark {
+      position: absolute;
+      font-family: 'EB Garamond', serif;
+      font-size: clamp(200px, 35vw, 420px);
+      color: var(--gold);
+      opacity: 0.06;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      user-select: none;
+      line-height: 1;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.28em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 1.4rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+
+    .hero-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 700;
+      line-height: 1.0;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+      margin-bottom: 0.5rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.4s forwards;
+    }
+
+    .hero-title span { color: var(--gold); }
+
+    .hero-subtitle-he {
+      font-family: 'EB Garamond', serif;
+      font-size: clamp(1.1rem, 3vw, 1.7rem);
+      font-style: italic;
+      color: var(--ink-mid);
+      letter-spacing: 0.06em;
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.55s forwards;
+    }
+
+    .hero-divider {
+      width: 120px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 1.2rem auto;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.65s forwards;
+    }
+
+    .hero-desc {
+      max-width: 560px;
+      font-size: clamp(1rem, 2.2vw, 1.15rem);
+      color: var(--ink-mid);
+      line-height: 1.8;
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.75s forwards;
+    }
+
+    .hero-cta {
+      display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.9s forwards;
+    }
+
+    .btn {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.14em;
+      padding: 0.85rem 2.2rem;
+      border-radius: 2px;
+      text-decoration: none;
+      transition: all 0.25s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: var(--ink);
+      border: 2px solid var(--gold);
+    }
+    .btn-primary:hover {
+      background: var(--gold-light);
+      border-color: var(--gold-light);
+      box-shadow: 0 4px 20px rgba(184,136,42,0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 2px solid var(--ink-mid);
+    }
+    .btn-secondary:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      transform: translateY(-2px);
+    }
+
+    /* ── SECTION COMMONS ── */
+    section { position: relative; z-index: 1; }
+
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.6rem, 4vw, 2.5rem);
+      font-weight: 600;
+      color: var(--ink);
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title span { color: var(--gold); }
+
+    .ornament {
+      text-align: center;
+      color: var(--gold);
+      font-size: 1.4rem;
+      letter-spacing: 0.3em;
+      margin: 0.6rem 0 2.5rem;
+      opacity: 0.7;
+    }
+
+    /* ── NACH GRID ── */
+    #nach {
+      padding: 6rem 2rem;
+      background: linear-gradient(180deg, var(--parchment) 0%, var(--parchment-dark) 100%);
+    }
+
+    .nach-sections {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .nach-card {
+      background: var(--parchment);
+      border: 1.5px solid var(--gold);
+      border-top: 4px solid var(--gold);
+      padding: 2rem 1.8rem;
+      transition: transform 0.25s, box-shadow 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nach-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(184,136,42,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .nach-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px var(--shadow);
+    }
+
+    .nach-card-he {
+      font-family: 'EB Garamond', serif;
+      font-size: 2.4rem;
+      color: var(--gold);
+      opacity: 0.5;
+      position: absolute;
+      top: 1rem; right: 1.2rem;
+      line-height: 1;
+    }
+
+    .nach-card-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .nach-card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.9rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.8rem;
+      line-height: 1.2;
+    }
+
+    .nach-card-desc {
+      font-size: 0.95rem;
+      color: var(--ink-mid);
+      line-height: 1.65;
+      margin-bottom: 1.4rem;
+    }
+
+    .book-list {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .book-tag {
+      font-family: 'EB Garamond', serif;
+      font-size: 0.82rem;
+      padding: 0.2rem 0.65rem;
+      border: 1px solid var(--gold);
+      color: var(--ink-mid);
+      border-radius: 1px;
+      transition: background 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+
+    .book-tag:hover {
+      background: var(--gold);
+      color: var(--ink);
+    }
+
+    .card-link {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      transition: gap 0.2s;
+    }
+    .card-link:hover { gap: 0.7rem; }
+    .card-link::after { content: '→'; }
+
+    /* ── FEATURES ── */
+    #features {
+      padding: 6rem 2rem;
+      background: var(--ink);
+      color: var(--parchment);
+    }
+
+    #features .section-title { color: var(--parchment); }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .feature-item {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      border: 1px solid rgba(184,136,42,0.3);
+      transition: border-color 0.25s, background 0.25s;
+    }
+
+    .feature-item:hover {
+      border-color: var(--gold);
+      background: rgba(184,136,42,0.06);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .feature-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.88rem;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      margin-bottom: 0.6rem;
+    }
+
+    .feature-desc {
+      font-size: 0.92rem;
+      color: rgba(245,238,220,0.7);
+      line-height: 1.6;
+    }
+
+    /* ── ABOUT ── */
+    #about {
+      padding: 6rem 2rem;
+      background: var(--parchment-dark);
+    }
+
+    .about-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .about-inner p {
+      font-size: 1.1rem;
+      color: var(--ink-mid);
+      line-height: 1.9;
+      margin-bottom: 1.2rem;
+    }
+
+    .pasuk {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      font-style: italic;
+      color: var(--ink);
+      border-left: 3px solid var(--gold);
+      padding: 0.8rem 1.5rem;
+      text-align: left;
+      margin: 2rem auto;
+      max-width: 600px;
+      background: rgba(184,136,42,0.05);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      color: var(--parchment);
+      text-align: center;
+      padding: 3rem 2rem;
+      border-top: 2px solid var(--gold);
+    }
+
+    footer .footer-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.6rem;
+    }
+
+    footer p {
+      font-size: 0.88rem;
+      color: rgba(245,238,220,0.5);
+      letter-spacing: 0.04em;
+    }
+
+    footer .footer-divider {
+      width: 60px; height: 1px;
+      background: var(--gold);
+      margin: 1.2rem auto;
+      opacity: 0.4;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SCROLLED-IN REVEALS ── */
+    .reveal {
+      opacity: 0; transform: translateY(30px);
+      transition: opacity 0.7s, transform 0.7s;
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav { padding: 0 1.2rem; }
+      .nav-links { gap: 1.2rem; }
+      .hero { padding: 7rem 1.4rem 4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">סי<span>manim</span></a>
+    <ul class="nav-links">
+      <li><a href="#nach">Nach</a></li>
+      <li><a href="#features">Resources</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-watermark">ס</div>
+    <div class="hero-frame"></div>
+    <div class="hero-frame-inner"></div>
+
+    <p class="hero-eyebrow">See them · Know them · Remember them</p>
+    <h1 class="hero-title">סי<span>manim</span></h1>
+    <p class="hero-subtitle-he">Because you have to <em>see</em> them to remember them</p>
+    <div class="hero-divider"></div>
+    <p class="hero-desc">
+      Visual memory tools, stories, and simanim to help you truly know Nach —
+      Nevi'im and Kesuvim — through vivid mnemonics, audio, images, and more.
+    </p>
+    <div class="hero-cta">
+      <a href="#nach" class="btn btn-primary">Explore Nach</a>
+      <a href="#about" class="btn btn-secondary">Our Mission</a>
+    </div>
+  </section>
+
+  <!-- NACH SECTIONS -->
+  <section id="nach">
+    <p class="section-title reveal">The Books of <span>Nach</span></p>
+    <p class="ornament reveal">✦ &nbsp; ✦ &nbsp; ✦</p>
+
+    <div class="nach-sections">
+
+      <div class="nach-card reveal">
+        <span class="nach-card-he">נ</span>
+        <p class="nach-card-label">Section I</p>
+        <h2 class="nach-card-title">Nevi'im Rishonim</h2>
+        <p class="nach-card-desc">The Early Prophets — conquest, judges, kings, and the story of Am Yisrael in its land.</p>
+        <div class="book-list">
+          <a href="book.html?book=yehoshua" class="book-tag">Yehoshua</a>
+          <a href="book.html?book=yehoshua" class="book-tag">Shoftim</a>
+          <a href="book.html?book=yehoshua" class="book-tag">Shmuel Aleph</a>
+          <a href="book.html?book=yehoshua" class="book-tag">Shmuel Bet</a>
+          <a href="book.html?book=yehoshua" class="book-tag">Melachim Aleph</a>
+          <a href="book.html?book=yehoshua" class="book-tag">Melachim Bet</a>
+        </div>
+        <a href="book.html?book=yehoshua" class="card-link">Browse simanim</a>
+      </div>
+
+      <div class="nach-card reveal">
+        <span class="nach-card-he">נ</span>
+        <p class="nach-card-label">Section II</p>
+        <h2 class="nach-card-title">Nevi'im Acharonim</h2>
+        <p class="nach-card-desc">The Later Prophets — prophecy, rebuke, and hope from Yeshayahu through the Trei Asar.</p>
+        <div class="book-list">
+          <span class="book-tag">Yeshayahu</span>
+          <span class="book-tag">Yirmiyahu</span>
+          <span class="book-tag">Yechezkel</span>
+          <span class="book-tag">Trei Asar</span>
+        </div>
+        <a href="#" class="card-link">Browse simanim</a>
+      </div>
+
+      <div class="nach-card reveal">
+        <span class="nach-card-he">כ</span>
+        <p class="nach-card-label">Section III</p>
+        <h2 class="nach-card-title">Kesuvim</h2>
+        <p class="nach-card-desc">The Writings — poetry, wisdom, and the sacred writings from Tehillim to Divrei HaYamim.</p>
+        <div class="book-list">
+          <span class="book-tag">Tehillim</span>
+          <span class="book-tag">Mishlei</span>
+          <span class="book-tag">Iyov</span>
+          <span class="book-tag">Megillot</span>
+          <span class="book-tag">Daniel</span>
+          <span class="book-tag">Ezra / Nechemia</span>
+          <span class="book-tag">Divrei HaYamim</span>
+        </div>
+        <a href="#" class="card-link">Browse simanim</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <p class="section-title reveal">Learning <span style="color:var(--gold)">Resources</span></p>
+    <p class="ornament reveal" style="color:rgba(184,136,42,0.6)">✦ &nbsp; ✦ &nbsp; ✦</p>
+
+    <div class="features-grid">
+      <div class="feature-item reveal">
+        <span class="feature-icon">📖</span>
+        <p class="feature-title">Memory Stories</p>
+        <p class="feature-desc">Vivid narratives that link perakim and themes to unforgettable images.</p>
+      </div>
+      <div class="feature-item reveal">
+        <span class="feature-icon">🖼️</span>
+        <p class="feature-title">Visual Mnemonics</p>
+        <p class="feature-desc">Illustrated simanim that make abstract content concrete and sticky.</p>
+      </div>
+      <div class="feature-item reveal">
+        <span class="feature-icon">🎧</span>
+        <p class="feature-title">Audio</p>
+        <p class="feature-desc">Listen and learn on the go — narrated memory aids for every sefer.</p>
+      </div>
+      <div class="feature-item reveal">
+        <span class="feature-icon">🎬</span>
+        <p class="feature-title">Video</p>
+        <p class="feature-desc">Engaging video walkthroughs that bring the stories to life.</p>
+      </div>
+      <div class="feature-item reveal">
+        <span class="feature-icon">✍️</span>
+        <p class="feature-title">Quizzes</p>
+        <p class="feature-desc">Test yourself and lock in what you've learned with spaced review.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <p class="section-title reveal">Our <span>Mission</span></p>
+    <p class="ornament reveal">✦ &nbsp; ✦ &nbsp; ✦</p>
+    <div class="about-inner">
+      <blockquote class="pasuk reveal">
+        "לֹא יָמוּשׁ סֵפֶר הַתּוֹרָה הַזֶּה מִפִּיךָ"<br>
+        <small style="font-size:0.85em; color:var(--ink-mid);">"This book of Torah shall not depart from your mouth" — Yehoshua 1:8</small>
+      </blockquote>
+      <p class="reveal">
+        Simanim was built by a group of people passionate about making all of Nach truly knowable —
+        not just studied, but remembered. Using proven memory techniques, we're creating simanim
+        for every sefer in Nach, one book at a time.
+      </p>
+      <p class="reveal">
+        Our vision is simple: anyone, of any age, should be able to hold the entire Nach in their mind.
+        As the project grows, we plan to expand these tools to all of Torah.
+      </p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p class="footer-logo">Simanim</p>
+    <div class="footer-divider"></div>
+    <p>See them · Know them · Remember Torah · סימנים</p>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 80);
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>

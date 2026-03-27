@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book — Simanim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- marked.js for rendering markdown story -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- js-yaml for parsing frontmatter -->
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --parchment:      #f5eedc;
+      --parchment-dark: #e8dfc4;
+      --ink:            #1a1208;
+      --ink-mid:        #3b2e14;
+      --gold:           #b8882a;
+      --gold-light:     #d4a843;
+      --gold-pale:      #f0dfa0;
+      --red-accent:     #8b2318;
+      --shadow:         rgba(26,18,8,0.18);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--parchment);
+      color: var(--ink);
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 18px; line-height: 1.7; overflow-x: hidden;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 3rem; height: 64px;
+      background: rgba(245,238,220,0.92);
+      backdrop-filter: blur(6px);
+      border-bottom: 1.5px solid var(--gold);
+      box-shadow: 0 2px 18px var(--shadow);
+    }
+    .nav-logo { font-family:'Cinzel',serif; font-size:1.35rem; font-weight:700; color:var(--ink); letter-spacing:0.08em; text-decoration:none; }
+    .nav-logo span { color: var(--gold); }
+    .nav-back { font-family:'EB Garamond',serif; font-size:1rem; color:var(--ink-mid); text-decoration:none; letter-spacing:0.04em; display:flex; align-items:center; gap:0.4rem; transition:color 0.2s; }
+    .nav-back:hover { color: var(--gold); }
+    .nav-back::before { content: '←'; }
+
+    .book-hero {
+      position: relative; padding: 7rem 2rem 3.5rem;
+      text-align: center;
+      background: linear-gradient(180deg, var(--parchment-dark) 0%, var(--parchment) 100%);
+      border-bottom: 1.5px solid var(--gold); overflow: hidden;
+    }
+    .book-hero-watermark {
+      position: absolute; font-family:'EB Garamond',serif;
+      font-size: clamp(160px,28vw,320px); color:var(--gold); opacity:0.07;
+      top:50%; left:50%; transform:translate(-50%,-50%);
+      pointer-events:none; user-select:none; line-height:1;
+    }
+    .book-section-label { font-family:'Cinzel',serif; font-size:0.72rem; letter-spacing:0.26em; color:var(--gold); text-transform:uppercase; margin-bottom:0.6rem; }
+    .book-title { font-family:'Cinzel',serif; font-size:clamp(2.5rem,7vw,5rem); font-weight:700; color:var(--ink); letter-spacing:0.04em; line-height:1.1; margin-bottom:0.3rem; }
+    .book-title-he { font-family:'Cormorant Garamond',serif; font-size:clamp(1.2rem,3vw,1.8rem); font-style:italic; color:var(--gold); margin-bottom:0.8rem; letter-spacing:0.08em; }
+    .book-desc { max-width:580px; margin:0 auto 1.5rem; font-size:1.05rem; color:var(--ink-mid); line-height:1.8; }
+    .gold-divider { width:80px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0.2rem auto; }
+    .chapter-nav { display:flex; flex-wrap:wrap; gap:0.4rem; justify-content:center; margin-top:1rem; }
+    .chapter-pill { font-family:'Cinzel',serif; font-size:0.72rem; letter-spacing:0.1em; padding:0.3rem 0.9rem; border:1px solid var(--gold); color:var(--ink-mid); background:transparent; cursor:pointer; transition:all 0.2s; border-radius:1px; }
+    .chapter-pill:hover, .chapter-pill.active { background:var(--gold); color:var(--ink); }
+
+    main { position:relative; z-index:1; max-width:1100px; margin:0 auto; padding:3rem 2rem 5rem; display:flex; flex-direction:column; gap:2.5rem; }
+
+    .content-card { background:var(--parchment); border:1.5px solid rgba(184,136,42,0.35); border-left:4px solid var(--gold); transition:box-shadow 0.25s, opacity 0.6s, transform 0.6s; opacity:0; transform:translateY(24px); }
+    .content-card.visible { opacity:1; transform:none; }
+    .content-card:hover { box-shadow:0 8px 32px var(--shadow); }
+    .card-header { display:flex; align-items:center; justify-content:space-between; padding:1.2rem 1.6rem; border-bottom:1px solid rgba(184,136,42,0.2); cursor:pointer; user-select:none; }
+    .card-header-left { display:flex; align-items:center; gap:1rem; }
+    .card-icon { width:38px; height:38px; background:var(--gold-pale); border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+    .card-title { font-family:'Cinzel',serif; font-size:1rem; letter-spacing:0.1em; color:var(--ink); font-weight:600; }
+    .card-subtitle { font-size:0.85rem; color:var(--ink-mid); font-style:italic; }
+    .card-toggle { font-size:1.1rem; color:var(--gold); transition:transform 0.3s; }
+    .card-toggle.open { transform:rotate(180deg); }
+    .card-body { padding:1.6rem; display:none; }
+    .card-body.open { display:block; }
+
+    .video-embed { position:relative; width:100%; padding-top:56.25%; background:var(--ink); border:1px solid rgba(184,136,42,0.3); }
+    .video-embed iframe { position:absolute; inset:0; width:100%; height:100%; border:none; }
+    .video-placeholder { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.8rem; color:var(--gold); }
+    .video-placeholder .play-icon { width:64px; height:64px; border:2px solid var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.6rem; }
+    .video-placeholder p { font-family:'Cinzel',serif; font-size:0.8rem; letter-spacing:0.14em; color:rgba(184,136,42,0.6); }
+
+    .siman-img { width:100%; border:1px solid rgba(184,136,42,0.3); }
+    .no-content { font-style:italic; color:rgba(59,46,20,0.45); font-size:0.95rem; padding:1rem 0; }
+
+    .story-body { font-size:1.05rem; line-height:1.9; color:var(--ink-mid); }
+    .story-body h1,.story-body h2,.story-body h3 { font-family:'Cinzel',serif; color:var(--ink); margin:1rem 0 0.4rem; }
+    .story-body strong { color:var(--ink); }
+    .story-body em { color:var(--gold); font-style:italic; }
+    .story-body p { margin-bottom:0.9rem; }
+
+    .pdf-zone { display:flex; flex-direction:column; gap:1rem; }
+    .pdf-item { display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.1rem; border:1px solid rgba(184,136,42,0.3); background:var(--parchment-dark); }
+    .pdf-item-left { display:flex; align-items:center; gap:0.8rem; }
+    .pdf-icon { font-size:1.4rem; color:var(--red-accent); }
+    .pdf-name { font-family:'Cinzel',serif; font-size:0.85rem; letter-spacing:0.06em; color:var(--ink); }
+    .pdf-download { font-family:'Cinzel',serif; font-size:0.75rem; letter-spacing:0.12em; color:var(--gold); text-decoration:none; padding:0.3rem 0.8rem; border:1px solid var(--gold); transition:all 0.2s; }
+    .pdf-download:hover { background:var(--gold); color:var(--ink); }
+
+    .quiz-container { display:flex; flex-direction:column; gap:1.4rem; }
+    .quiz-question { border:1px solid rgba(184,136,42,0.25); background:var(--parchment-dark); padding:1.2rem 1.4rem; }
+    .quiz-q-text { font-family:'Cormorant Garamond',serif; font-size:1.15rem; font-weight:600; color:var(--ink); margin-bottom:0.9rem; }
+    .quiz-options { display:flex; flex-direction:column; gap:0.5rem; }
+    .quiz-option { display:flex; align-items:center; gap:0.7rem; padding:0.55rem 0.9rem; border:1.5px solid rgba(184,136,42,0.25); cursor:pointer; transition:all 0.2s; font-size:0.95rem; color:var(--ink-mid); }
+    .quiz-option:hover { border-color:var(--gold); background:rgba(184,136,42,0.05); }
+    .quiz-option.correct { border-color:#2a7a3b; background:rgba(42,122,59,0.08); color:#1a4d25; }
+    .quiz-option.wrong   { border-color:var(--red-accent); background:rgba(139,35,24,0.07); color:var(--red-accent); }
+    .quiz-option-letter { width:24px; height:24px; flex-shrink:0; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Cinzel',serif; font-size:0.75rem; color:var(--gold); }
+    .quiz-feedback { display:none; margin-top:0.6rem; font-size:0.9rem; font-style:italic; padding:0.5rem 0.9rem; }
+    .quiz-feedback.show { display:block; }
+    .quiz-feedback.correct { color:#1a4d25; background:rgba(42,122,59,0.08); border-left:3px solid #2a7a3b; }
+    .quiz-feedback.wrong   { color:var(--red-accent); background:rgba(139,35,24,0.06); border-left:3px solid var(--red-accent); }
+    .quiz-score { display:none; text-align:center; padding:1.4rem; border:1.5px solid var(--gold); background:rgba(184,136,42,0.06); margin-top:1rem; }
+    .quiz-score.show { display:block; }
+    .quiz-score-num { font-family:'Cinzel',serif; font-size:2.2rem; color:var(--gold); margin-bottom:0.3rem; }
+    .quiz-score p { font-size:0.95rem; color:var(--ink-mid); }
+
+    .btn { font-family:'Cinzel',serif; font-size:0.8rem; letter-spacing:0.14em; padding:0.7rem 1.8rem; border:none; cursor:pointer; transition:all 0.22s; }
+    .btn-gold { background:var(--gold); color:var(--ink); }
+    .btn-gold:hover { background:var(--gold-light); box-shadow:0 4px 16px rgba(184,136,42,0.35); transform:translateY(-1px); }
+    .btn-outline { background:transparent; color:var(--ink); border:1.5px solid var(--ink-mid); }
+    .btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+    .btn-row { display:flex; gap:0.7rem; flex-wrap:wrap; margin-top:1rem; }
+
+    footer { position:relative; z-index:1; background:var(--ink); color:var(--parchment); text-align:center; padding:2.5rem 2rem; border-top:2px solid var(--gold); }
+    footer .footer-logo { font-family:'Cinzel',serif; font-size:1.3rem; color:var(--gold); letter-spacing:0.1em; margin-bottom:0.4rem; }
+    footer p { font-size:0.85rem; color:rgba(245,238,220,0.45); }
+
+    #loading { display:flex; align-items:center; justify-content:center; min-height:60vh; font-family:'Cinzel',serif; letter-spacing:0.1em; color:var(--gold); font-size:1rem; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">סי<span>manim</span></a>
+    <a href="index.html" class="nav-back">All Books</a>
+  </nav>
+
+  <div id="loading">Loading…</div>
+  <div id="bookHero" style="display:none" class="book-hero">
+    <div class="book-hero-watermark" id="heroWatermark"></div>
+    <p class="book-section-label" id="heroSection"></p>
+    <h1 class="book-title" id="heroTitle"></h1>
+    <p class="book-title-he" id="heroTitleHe"></p>
+    <p class="book-desc" id="heroDesc"></p>
+    <div class="gold-divider"></div>
+    <p style="font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.18em;color:var(--gold);margin-top:1rem;">JUMP TO CHAPTER</p>
+    <div class="chapter-nav" id="chapterNav"></div>
+  </div>
+
+  <main id="mainContent" style="display:none">
+
+    <div class="content-card" id="card-video">
+      <div class="card-header" onclick="toggleCard('video')">
+        <div class="card-header-left">
+          <div class="card-icon">🎬</div>
+          <div><p class="card-title">Video</p><p class="card-subtitle">Watch the siman come to life</p></div>
+        </div>
+        <span class="card-toggle open" id="toggle-video">▾</span>
+      </div>
+      <div class="card-body open" id="body-video">
+        <div class="video-embed" id="videoEmbed">
+          <div class="video-placeholder" id="videoPlaceholder">
+            <div class="play-icon">▶</div>
+            <p>Video coming soon</p>
+          </div>
+          <iframe id="videoFrame" style="display:none" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card" id="card-siman">
+      <div class="card-header" onclick="toggleCard('siman')">
+        <div class="card-header-left">
+          <div class="card-icon">🖼️</div>
+          <div><p class="card-title">The Siman</p><p class="card-subtitle">Visual mnemonic image</p></div>
+        </div>
+        <span class="card-toggle open" id="toggle-siman">▾</span>
+      </div>
+      <div class="card-body open" id="body-siman">
+        <div id="simanContent"></div>
+      </div>
+    </div>
+
+    <div class="content-card" id="card-story">
+      <div class="card-header" onclick="toggleCard('story')">
+        <div class="card-header-left">
+          <div class="card-icon">📖</div>
+          <div><p class="card-title">Memory Story</p><p class="card-subtitle">The narrative siman in words</p></div>
+        </div>
+        <span class="card-toggle open" id="toggle-story">▾</span>
+      </div>
+      <div class="card-body open" id="body-story">
+        <div class="story-body" id="storyContent"></div>
+      </div>
+    </div>
+
+    <div class="content-card" id="card-pdf">
+      <div class="card-header" onclick="toggleCard('pdf')">
+        <div class="card-header-left">
+          <div class="card-icon">📄</div>
+          <div><p class="card-title">Printable PDF</p><p class="card-subtitle">Download & print the siman sheet</p></div>
+        </div>
+        <span class="card-toggle open" id="toggle-pdf">▾</span>
+      </div>
+      <div class="card-body open" id="body-pdf">
+        <div class="pdf-zone" id="pdfZone"></div>
+      </div>
+    </div>
+
+    <div class="content-card" id="card-quiz">
+      <div class="card-header" onclick="toggleCard('quiz')">
+        <div class="card-header-left">
+          <div class="card-icon">✍️</div>
+          <div><p class="card-title">Pop Quiz</p><p class="card-subtitle">Test your knowledge</p></div>
+        </div>
+        <span class="card-toggle open" id="toggle-quiz">▾</span>
+      </div>
+      <div class="card-body open" id="body-quiz">
+        <div class="quiz-container" id="quizContainer"></div>
+        <div class="quiz-score" id="quizScore">
+          <div class="quiz-score-num" id="quizScoreNum">—</div>
+          <p id="quizScoreMsg"></p>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-gold" onclick="submitQuiz()">Submit Answers</button>
+          <button class="btn btn-outline" onclick="buildQuiz()">Try Again</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p class="footer-logo">Simanim</p>
+    <p>See them · Know them · Remember Torah · סימנים</p>
+  </footer>
+
+  <script>
+    // ── Parse ?book=yehoshua from URL ──
+    const params = new URLSearchParams(location.search);
+    const bookSlug = params.get('book') || 'yehoshua';
+
+    // ── Parse markdown frontmatter ──
+    function parseFrontmatter(text) {
+      const match = text.match(/^---\n([\s\S]*?)\n---/);
+      if (!match) return { data: {}, body: text };
+      const data = jsyaml.load(match[1]);
+      const body = text.slice(match[0].length).trim();
+      return { data, body };
+    }
+
+    // ── Embed video URL ──
+    function embedVideo(url) {
+      if (!url) return;
+      let embedUrl = '';
+      const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
+      const vm = url.match(/vimeo\.com\/(\d+)/);
+      if (yt) embedUrl = `https://www.youtube.com/embed/${yt[1]}`;
+      else if (vm) embedUrl = `https://player.vimeo.com/video/${vm[1]}`;
+      if (!embedUrl) return;
+      document.getElementById('videoPlaceholder').style.display = 'none';
+      const frame = document.getElementById('videoFrame');
+      frame.src = embedUrl; frame.style.display = 'block';
+    }
+
+    // ── Build chapter pills ──
+    function buildChapters(n) {
+      const nav = document.getElementById('chapterNav');
+      for (let i = 1; i <= n; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'chapter-pill';
+        btn.textContent = i;
+        btn.onclick = () => {
+          document.querySelectorAll('.chapter-pill').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+        };
+        nav.appendChild(btn);
+      }
+    }
+
+    // ── Build PDFs ──
+    function buildPdfs(pdfs) {
+      const zone = document.getElementById('pdfZone');
+      if (!pdfs || pdfs.length === 0) {
+        zone.innerHTML = '<p class="no-content">No PDFs uploaded yet.</p>'; return;
+      }
+      pdfs.forEach(pdf => {
+        if (!pdf.file) return;
+        zone.innerHTML += `
+          <div class="pdf-item">
+            <div class="pdf-item-left">
+              <span class="pdf-icon">📄</span>
+              <span class="pdf-name">${pdf.label}</span>
+            </div>
+            <a href="${pdf.file}" download class="pdf-download">Download ↓</a>
+          </div>`;
+      });
+    }
+
+    // ── Build Quiz ──
+    let quizData = [];
+    let answered = {};
+
+    function buildQuiz() {
+      answered = {};
+      const container = document.getElementById('quizContainer');
+      container.innerHTML = '';
+      document.getElementById('quizScore').classList.remove('show');
+      if (!quizData.length) {
+        container.innerHTML = '<p class="no-content">No quiz questions yet.</p>'; return;
+      }
+      const letters = ['A','B','C','D'];
+      const keys = ['option_a','option_b','option_c','option_d'];
+      quizData.forEach((q, qi) => {
+        const opts = keys.map((k, oi) => `
+          <div class="quiz-option" id="opt-${qi}-${oi}" onclick="selectAnswer(${qi},${oi})">
+            <div class="quiz-option-letter">${letters[oi]}</div>
+            ${q[k]}
+          </div>`).join('');
+        container.innerHTML += `
+          <div class="quiz-question">
+            <p class="quiz-q-text">${qi+1}. ${q.question}</p>
+            <div class="quiz-options">${opts}</div>
+            <div class="quiz-feedback" id="fb-${qi}"></div>
+          </div>`;
+      });
+    }
+
+    function selectAnswer(qi, oi) {
+      if (answered[qi] !== undefined) return;
+      answered[qi] = oi;
+      document.querySelectorAll(`[id^="opt-${qi}-"]`).forEach(el => el.style.opacity='0.5');
+      const el = document.getElementById(`opt-${qi}-${oi}`);
+      el.style.opacity='1'; el.style.borderColor='var(--gold)';
+    }
+
+    function submitQuiz() {
+      const letters = ['a','b','c','d'];
+      let score = 0;
+      quizData.forEach((q, qi) => {
+        const chosen = answered[qi];
+        const fb = document.getElementById('fb-' + qi);
+        const correctIdx = letters.indexOf(q.correct);
+        if (chosen === undefined) return;
+        const isCorrect = chosen === correctIdx;
+        if (isCorrect) score++;
+        document.getElementById(`opt-${qi}-${chosen}`).classList.add(isCorrect ? 'correct' : 'wrong');
+        document.getElementById(`opt-${qi}-${correctIdx}`).classList.add('correct');
+        fb.textContent = q.explanation;
+        fb.className = `quiz-feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+      });
+      document.getElementById('quizScoreNum').textContent = `${score} / ${quizData.length}`;
+      document.getElementById('quizScoreMsg').textContent =
+        score === quizData.length ? "Excellent! You know your stuff! 🌟" :
+        score >= quizData.length / 2 ? "Good effort — review the simanim and try again." :
+        "Keep learning — the simanim will help you remember!";
+      document.getElementById('quizScore').classList.add('show');
+    }
+
+    // ── Card toggle ──
+    function toggleCard(id) {
+      const body = document.getElementById('body-' + id);
+      const toggle = document.getElementById('toggle-' + id);
+      body.classList.toggle('open');
+      toggle.classList.toggle('open');
+    }
+
+    // ── Scroll reveal ──
+    const revealObserver = new IntersectionObserver(entries => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 100);
+          revealObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08 });
+
+    // ── LOAD BOOK ──
+    async function loadBook() {
+      try {
+        const res = await fetch(`/content/books/${bookSlug}.md`);
+        if (!res.ok) throw new Error('Book not found');
+        const text = await res.text();
+        const { data, body } = parseFrontmatter(text);
+
+        document.title = `${data.title} — Simanim`;
+
+        // Hero
+        document.getElementById('heroWatermark').textContent = data.watermark_letter || '';
+        document.getElementById('heroSection').textContent = data.section?.replace(/-/g, ' ') || '';
+        document.getElementById('heroTitle').textContent = data.title || '';
+        document.getElementById('heroTitleHe').textContent = data.title_he || '';
+        document.getElementById('heroDesc').textContent = data.description || '';
+        buildChapters(data.chapters || 1);
+
+        // Video
+        if (data.video_url) embedVideo(data.video_url);
+
+        // Siman image
+        const simanContent = document.getElementById('simanContent');
+        if (data.siman_image) {
+          simanContent.innerHTML = `<img src="${data.siman_image}" class="siman-img" alt="Siman for ${data.title}" />`;
+        } else {
+          simanContent.innerHTML = '<p class="no-content">Siman image coming soon.</p>';
+        }
+
+        // Story
+        const storyContent = document.getElementById('storyContent');
+        const storyText = body || data.story || '';
+        storyContent.innerHTML = storyText
+          ? marked.parse(storyText)
+          : '<p class="no-content">Memory story coming soon.</p>';
+
+        // PDFs
+        buildPdfs(data.pdfs);
+
+        // Quiz
+        quizData = data.quiz || [];
+        buildQuiz();
+
+        // Show page
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('bookHero').style.display = 'block';
+        document.getElementById('mainContent').style.display = 'flex';
+
+        document.querySelectorAll('.content-card').forEach(el => revealObserver.observe(el));
+
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Book not found. ' + err.message;
+      }
+    }
+
+    loadBook();
+  </script>
+</body>
+</html>

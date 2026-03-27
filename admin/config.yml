@@ -1,0 +1,137 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "static/uploads"
+public_folder: "/static/uploads"
+
+logo_url: /static/simanim-logo.png
+
+collections:
+
+  # ── BOOKS ──────────────────────────────────────────────────────────
+  - name: "books"
+    label: "📚 Books"
+    label_singular: "Book"
+    folder: "content/books"
+    create: true
+    slug: "{{slug}}"
+    identifier_field: "title"
+    fields:
+
+      - label: "Book Title (English)"
+        name: "title"
+        widget: "string"
+        hint: "e.g. Yehoshua"
+
+      - label: "Hebrew Title"
+        name: "title_he"
+        widget: "string"
+        hint: "e.g. יְהוֹשֻׁעַ"
+
+      - label: "Section"
+        name: "section"
+        widget: "select"
+        options:
+          - { label: "Nevi'im Rishonim", value: "nevi'im-rishonim" }
+          - { label: "Nevi'im Acharonim", value: "nevi'im-acharonim" }
+          - { label: "Kesuvim", value: "kesuvim" }
+
+      - label: "Order in Section"
+        name: "order"
+        widget: "number"
+        hint: "Used to sort books within their section"
+
+      - label: "Number of Perakim (Chapters)"
+        name: "chapters"
+        widget: "number"
+
+      - label: "Short Description"
+        name: "description"
+        widget: "text"
+        hint: "One or two sentences shown on the book card"
+
+      - label: "Hebrew Watermark Letter"
+        name: "watermark_letter"
+        widget: "string"
+        hint: "Single Hebrew letter used as background watermark, e.g. י"
+
+      # ── Video ──
+      - label: "Video URL"
+        name: "video_url"
+        widget: "string"
+        required: false
+        hint: "YouTube or Vimeo URL for the siman video"
+
+      # ── Siman Image ──
+      - label: "Siman Image"
+        name: "siman_image"
+        widget: "image"
+        required: false
+        hint: "The main visual mnemonic image"
+
+      # ── Memory Story ──
+      - label: "Memory Story"
+        name: "story"
+        widget: "markdown"
+        required: false
+        hint: "The full narrative memory story for this sefer"
+
+      # ── Printable PDFs ──
+      - label: "Printable PDFs"
+        name: "pdfs"
+        widget: "list"
+        required: false
+        summary: "{{fields.label}}"
+        fields:
+          - label: "Label"
+            name: "label"
+            widget: "string"
+            hint: "e.g. Yehoshua Siman Sheet"
+          - label: "PDF File"
+            name: "file"
+            widget: "file"
+            media_library:
+              config:
+                multiple: false
+
+      # ── Pop Quiz ──
+      - label: "Pop Quiz Questions"
+        name: "quiz"
+        widget: "list"
+        required: false
+        summary: "{{fields.question}}"
+        fields:
+          - label: "Question"
+            name: "question"
+            widget: "string"
+          - label: "Option A"
+            name: "option_a"
+            widget: "string"
+          - label: "Option B"
+            name: "option_b"
+            widget: "string"
+          - label: "Option C"
+            name: "option_c"
+            widget: "string"
+          - label: "Option D"
+            name: "option_d"
+            widget: "string"
+          - label: "Correct Answer"
+            name: "correct"
+            widget: "select"
+            options:
+              - { label: "A", value: "a" }
+              - { label: "B", value: "b" }
+              - { label: "C", value: "c" }
+              - { label: "D", value: "d" }
+          - label: "Explanation"
+            name: "explanation"
+            widget: "text"
+            hint: "Shown after the user answers"
+
+      - label: "Published"
+        name: "published"
+        widget: "boolean"
+        default: false
+        hint: "Toggle on when this book's content is ready to show"
